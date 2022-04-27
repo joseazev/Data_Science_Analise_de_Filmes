@@ -130,14 +130,175 @@ sns.boxplot(y = media_de_notas)
 plt.figure(figsize=(7,8))
 sns.distplot(media_de_notas, bins=15)
 
-tmdb = pd.read_csv('tmdb_5000_movies.csv')
-tmdb.head()
+"""#Analise dos dados TMDB
 
-tmdb.original_language.unique()
+## Importando a base de dados
 
-"""```
-Visualizar qual é a nota única
+```
+. Importando arquivo TMDB
+  . Trazer base de dados
+. Apresentando as 5 primeiras linhas
+  . Verificar se não houve erro 
+  . Facilitar o acesso as colunas
 ```
 """
 
+tmdb = pd.read_csv('tmdb_5000_movies.csv')
+tmdb.head()
+
+"""## Verificando os dados únicos da coluna **original_language**
+
+```
+Entendendo a base de dados / regra de negócio
+```
+"""
+
+tmdb.original_language.unique()
+
+"""##Verificando os dados únicos da coluna da coluna **vote_average**
+
+"""
+
 tmdb.vote_average.unique()
+
+"""## Analisando a frequência de idiomas dos filmes
+
+"""
+
+tmdb.original_language.value_counts()
+
+"""### vendo a estrutura da serie
+```
+Fins didáticos
+```
+
+Nesta sessão, é para mostrar que o resultado da função value_coutns() é uma serie, e veremos que a serie só tem as colunas index e values.
+"""
+
+tmdb.original_language.value_counts().index
+
+tmdb.original_language.value_counts().values
+
+"""### Criando um dataframe apartir do resultado do value_counts
+
+1. value_counts()
+  . fazendo a contagem de frequencias do campo original_language
+2. to_frame()
+  . transformando a serie em data frame
+3. reset_index()
+  . refazer o index do data frame tornando o antigo indice em coluna
+
+"""
+
+contagem_de_liguas = tmdb.original_language.value_counts().to_frame().reset_index()
+contagem_de_liguas.head()
+
+"""Modificando o nome das colunas"""
+
+contagem_de_liguas.columns = ['original_language','total']
+contagem_de_liguas.head()
+
+"""## Iniciando o estudo dos dados
+
+Criando um gráfico de barras para melhor visualizar os dados.
+
+```
+Criando bons graficos
+```
+"""
+
+sns.barplot(x='original_language', y='total', data=contagem_de_liguas)
+
+"""Criando um grafico de categoria com ferramentas Seaborn"""
+
+sns.catplot(x='original_language', kind='count', data=tmdb)
+
+"""```
+Criando graficos não tão bons assim
+```
+"""
+
+plt.pie(contagem_de_liguas['total'], 
+        labels=contagem_de_liguas['original_language'], 
+        data=contagem_de_liguas)
+
+"""## Analisando a relevanicia da lingua inglesa para produção de filmes
+
+1. Contando a frequsncia de todos os idiomas
+2. Achando o total de filmes
+3. Achando a quantidade de filmes em inglês
+4. Achando o total de todos os idiomas menos o ingles
+5. Montando um data frame com essas informações
+"""
+
+total_por_idioma = tmdb.original_language.value_counts()
+total_de_filmes = total_por_idioma.sum()
+total_de_ingles = total_por_idioma.loc['en']
+total_de_outros = total_de_filmes - total_de_ingles
+
+idioma_de_filmes = {
+    'idiomas': ['Ingles', 'outros'],
+    'total': [total_de_ingles,total_de_outros]
+}
+
+idioma_de_filmes = pd.DataFrame(idioma_de_filmes)
+idioma_de_filmes
+
+""">Um bom gráfico"""
+
+sns.barplot(x='idiomas', y='total', data=idioma_de_filmes)
+
+"""> Um gráfico não tão bom assim"""
+
+plt.pie(idioma_de_filmes['total'], 
+        labels=idioma_de_filmes['idiomas'], 
+        data=idioma_de_filmes)
+
+"""## Melhorando a visualização para a frequencia de filmes de linguas não inglesas."""
+
+# Capturando os filmes de linguas não inglesa
+filmes_sem_idioma_ingles = tmdb.query("original_language != 'en'")
+# Calculando a frenquencia de filmes
+quantidade_filmes_sem_idioma_ingles = filmes_sem_idioma_ingles.original_language.value_counts()
+
+# Melhorando a vizualição de frequencia 
+sns.catplot(x = "original_language",                           # informando qual é a coluna que assumirar o eixo X
+            kind = "count",                                    # O que será feito no agrupamento 
+            data = filmes_sem_idioma_ingles,                   # base de dados
+            aspect = 2,                                        # Mudar o aspecto do plot de quadrado para retangular 
+            order = quantidade_filmes_sem_idioma_ingles.index, # definição da ordem de apresentação do eixo x
+            palette = "mako")                                  # Definição de paleta de cores graficos
+
+"""# Revisando Media, Mediana, Desvio Padrão."""
+
+# Descobrindo quais são os dois primeiros filmes da base de dados
+filmes.head(2)
+
+notas.columns
+
+notas_do_filme_toystory = notas.query("filmeID == 1")
+notas_do_filme_jumanji = notas.query("filmeID == 2")
+print(len(notas_do_filme_toystory), len(notas_do_filme_jumanji))
+
+print(f'A media de notas do filme Toy Story é {notas_do_filme_toystory.nota.mean():.2f}')
+print(f'A media de notas do filme Jumanji é {notas_do_filme_jumanji.nota.mean():.2f}')
+
+print(f'A mediana da nota do filme Toy Story é {notas_do_filme_toystory.nota.median()}')
+print(f'A mediana da nota do filme Jumanji é {notas_do_filme_jumanji.nota.median()}')
+
+sns.boxplot(notas_do_filme_toystory.nota)
+sns.boxplot(notas_do_filme_jumanji.nota)
+
+plt.boxplot([notas_do_filme_toystory.nota, notas_do_filme_jumanji.nota])
+
+sns.displot(notas_do_filme_toystory.nota)
+
+plt.hist(notas_do_filme_jumanji.nota)
+
+notas.columns
+
+sns.boxplot(x = "filmeID", y = "nota", data = notas.query("filmeID in [1,2,3,4,5]"))
+
+print(f"O edsvio padrão do filme Toy Story é {notas_do_filme_toystory['nota'].std()}")
+print(f"O edsvio padrão do filme Jumanji é {notas_do_filme_jumanji['nota'].std()}")
+
